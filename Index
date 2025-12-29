@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guitar Scale & Chord Finder</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #111;
+    color: #eee;
+  }
+  h1 {
+    color: #FFD700;
+    text-align: center;
+  }
+  select, button {
+    padding: 8px;
+    font-size: 16px;
+    margin: 10px 5px;
+  }
+  .results {
+    margin-top: 20px;
+  }
+  .note-list {
+    padding: 5px 0;
+    font-size: 18px;
+  }
+  .fretboard {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(13, 40px);
+    grid-gap: 2px;
+    justify-content: center;
+  }
+  .string {
+    display: contents;
+  }
+  .fret {
+    width: 38px;
+    height: 30px;
+    border: 1px solid #555;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #ccc;
+    border-radius: 4px;
+  }
+  .root-note {
+    background-color: #FFD700;
+    color: #111;
+  }
+</style>
+</head>
+<body>
+
+<h1>Guitar Scale & Chord Finder</h1>
+
+<label for="key">Select Key:</label>
+<select id="key">
+  <option value="C">C</option>
+  <option value="C#">C# / Db</option>
+  <option value="D">D</option>
+  <option value="D#">D# / Eb</option>
+  <option value="E">E</option>
+  <option value="F">F</option>
+  <option value="F#">F# / Gb</option>
+  <option value="G">G</option>
+  <option value="G#">G# / Ab</option>
+  <option value="A">A</option>
+  <option value="A#">A# / Bb</option>
+  <option value="B">B</option>
+</select>
+
+<select id="scaleType">
+  <option value="major">Major</option>
+  <option value="minor">Minor</option>
+</select>
+
+<button onclick="showScale()">Show Scale & Chords</button>
+
+<div class="results" id="results"></div>
+<div class="fretboard" id="fretboard"></div>
+
+<script>
+const chromatic = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Scale intervals
+const majorScalePattern = [2,2,1,2,2,2,1];
+const minorScalePattern = [2,1,2,2,1,2,2];
+const chordsPatternMajor = ['maj','min','min','maj','maj','min','dim'];
+const chordsPatternMinor = ['min','dim','maj','min','min','maj','maj'];
+
+// Standard tuning
+const strings = ['E','A','D','G','B','E'];
+
+function getScale(root, type='major') {
+  let pattern = type==='major'? majorScalePattern : minorScalePattern;
+  let index = chromatic.indexOf(root);
+  let scale = [root];
+  pattern.forEach(step => {
+    index = (index + step) % chromatic.length;
+    scale.push(chromatic[index]);
+  });
+  return scale.slice(0,7);
+}
+
+function getChords(scale, type='major') {
+  let pattern = type==='major'? chordsPatternMajor : chordsPatternMinor;
+  return scale.map((note,i) => note + pattern[i]);
+}
+
+function showScale() {
+  const key = document.getElementById('key').value;
+  const type = document.getElementById('scaleType').value;
+
+  const scale = getScale(key,type);
+  const chords = getChords(scale,type);
+
+  document.getElementById('results').innerHTML = `
+    <h2>${key} ${type.charAt(0).toUpperCase()+type.slice(1)} Scale:</h2>
+    <div class="note-list">${scale.join(' - ')}</div>
+    <h2>Chords:</h2>
+    <div class="note-list">${chords.join(' | ')}</div>
+  `;
+
+  drawFretboard(scale);
+}
+
+function drawFretboard(scale) {
+  const frets = 12; 
+  const fretboard = document.getElementById('fretboard');
+  fretboard.innerHTML = '';
+
+  strings.forEach(stringNote => {
+    let index = chromatic.indexOf(stringNote);
+    for(let fret=0; fret<=frets; fret++) {
+      let note = chromatic[(index+fret)%chromatic.length];
+      let div = document.createElement('div');
+      div.className = 'fret';
+      if(scale.includes(note)) div.classList.add('root-note');
+      div.textContent = note;
+      fretboard.appendChild(div);
+    }
+  });
+}
+
+// Initialize with C major
+showScale();
+</script>
+
+</body>
+</html>
